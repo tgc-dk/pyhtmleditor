@@ -17,6 +17,6 @@ setup(name = "pyhtmleditor",
         packages = ["pyhtmleditor", "pyhtmleditor.ui"],
         package_dir = {"": "src"},
         scripts = ["pyhtmleditor"],
-        requires = ["PyQt4"],
+        requires = ["PyQt5"],
         platforms = ["Linux", "Windows", "OSX"]
         )

@@ -17,21 +17,15 @@
 import os
 import sys
 
-try:
-    from PyQt4.QtGui import *
-    from PyQt4.QtCore import *
-    from PyQt4.QtWebKit import *
-except ImportError, err:
-    sys.stderr.write("Error: %s%s" % (str(err), os.linesep))
-    sys.exit(1)
+from PyQt5.QtGui import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWebKit import *
 
-try:
-    from pyhtmleditor.highlighter import Highlighter
-    from pyhtmleditor.ui.htmleditor_ui import Ui_MainWindow
-    from pyhtmleditor.ui.inserthtmldialog_ui import Ui_Dialog
-except ImportError, err:
-    sys.stderr.write("Error: %s%s" % (str(err), os.linesep))
-    sys.exit(1)
+from pyhtmleditor.highlighter import Highlighter
+from pyhtmleditor.ui.htmleditor_ui import Ui_MainWindow
+from pyhtmleditor.ui.inserthtmldialog_ui import Ui_Dialog
+
 
 class HtmlDialog(QDialog, Ui_Dialog):
     def __init__(self, parent=None):

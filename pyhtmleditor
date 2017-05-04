@@ -24,15 +24,12 @@ if os.path.isdir(os.path.join(".","src")) and os.path.isfile(
         os.path.join(".","setup.py")):
     sys.path.append(os.path.realpath("src"))
 
-try:
-    from PyQt4.QtGui import QApplication
-except ImportError, err:
-    sys.stderr.write("Error: %s%s" % (str(err), os.linesep))
-    sys.exit(1)
+from PyQt5.QtWidgets import QApplication
+
 
 try:
     from pyhtmleditor.htmleditor import HtmlEditor
-except ImportError, err:
+except ImportError as err:
     sys.stderr.write("Error: %s%s" % (str(err), os.linesep))
     sys.exit(1)
 
