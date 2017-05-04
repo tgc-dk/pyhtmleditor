@@ -27,11 +27,8 @@ if os.path.isdir(os.path.join(".","src")) and os.path.isfile(
 from PyQt5.QtWidgets import QApplication
 
 
-try:
-    from pyhtmleditor.htmleditor import HtmlEditor
-except ImportError as err:
-    sys.stderr.write("Error: %s%s" % (str(err), os.linesep))
-    sys.exit(1)
+from pyhtmleditor.htmleditor import HtmlEditor
+
 
 def main():
     app = QApplication(sys.argv)
