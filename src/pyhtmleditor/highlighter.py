@@ -48,7 +48,7 @@ class Highlighter(QtGui.QSyntaxHighlighter):
 
     def highlightBlock(self, text):
         state = int(self.previousBlockState())
-        length = text.length()
+        length = len(text)
         start = 0
         pos = 0
 
@@ -56,20 +56,20 @@ class Highlighter(QtGui.QSyntaxHighlighter):
 
             if state == State_Text:
                 while (pos < length):
-                    ch = text.at(pos)
-                    if ch.toAscii() == '<':
-                        if text.mid(pos, 4).toAscii() == "<!--":
+                    ch = text[pos]
+                    if ch == '<':
+                        if text[pos:pos+4] == "<!--":
                             state = State_Comment
                         else:
-                            if text.mid(pos, 9).toUpper() == "<!DOCTYPE":
+                            if text[pos:pos+9].upper() == "<!DOCTYPE":
                                 state = State_DocType
                             else:
                                 state = State_TagStart
                         break
-                    elif ch.toAscii() == "&":
+                    elif ch == "&":
                         start = pos
                         while pos < length:
-                            if text.at(pos + 1).toAscii() != ";":
+                            if text[pos + 1] != ";":
                                 self.setFormat(start, pos - start, self.m_colors[Entity])
                     else:
                         pos += 1
@@ -77,7 +77,7 @@ class Highlighter(QtGui.QSyntaxHighlighter):
             elif state == State_Comment:
                 start = pos
                 while pos < length:
-                    if text.mid(pos, 3).toAscii() == "-->":
+                    if text[pos:pos+3] == "-->":
                         pos += 3
                         state = State_Text
                         break
@@ -88,9 +88,9 @@ class Highlighter(QtGui.QSyntaxHighlighter):
             elif state == State_DocType:
                 start = pos
                 while pos < length:
-                    ch = text.at(pos)
+                    ch = text[pos]
                     pos += 1
-                    if ch.toAscii() == ">":
+                    if ch == ">":
                         state = State_Text
                         break
                 self.setFormat(start, pos - start, self.m_colors[DocType])
@@ -99,12 +99,12 @@ class Highlighter(QtGui.QSyntaxHighlighter):
             elif state == State_TagStart:
                 start = pos + 1
                 while pos < length:
-                    ch = text.at(pos)
+                    ch = text[pos]
                     pos += 1
-                    if ch.toAscii() == ">":
+                    if ch == ">":
                         state = State_Text
                         break
-                    if not ch.isSpace():
+                    if ch != ' ':
                         pos -= 1
                         state = State_TagName
                         break
@@ -113,13 +113,13 @@ class Highlighter(QtGui.QSyntaxHighlighter):
             elif state == State_TagName:
                 start = pos
                 while pos < length:
-                    ch = text.at(pos)
+                    ch = text[pos]
                     pos += 1
-                    if ch.isSpace():
+                    if ch == ' ':
                         pos -= 1
                         state = State_InsideTag
                         break
-                    if ch.toAscii() == ">":
+                    if ch == ">":
                         state = State_Text
                         break
                 self.setFormat(start, pos - start, self.m_colors[Tag])
@@ -128,14 +128,14 @@ class Highlighter(QtGui.QSyntaxHighlighter):
             elif state == State_InsideTag:
                 start = pos
                 while pos < length:
-                    ch = text.at(pos)
+                    ch = text[pos]
                     pos += 1
-                    if ch.toAscii() == "/":
+                    if ch == "/":
                         continue
-                    if ch.toAscii() == ">":
+                    if ch == ">":
                         state = State_Text
                         break
-                    if not ch.isSpace():
+                    if ch != ' ':
                         pos -= 1
                         state = State_AttributeName
                         break
@@ -144,12 +144,12 @@ class Highlighter(QtGui.QSyntaxHighlighter):
             elif state == State_AttributeName:
                 start = pos
                 while pos < length:
-                    ch = text.at(pos)
+                    ch = text[pos]
                     pos += 1
-                    if ch.toAscii() == "=":
+                    if ch == "=":
                         state = State_AttributeValue
                         break
-                    if ch.toAscii() == ">" or ch.toAscii() == "/":
+                    if ch == ">" or ch == "/":
                         state = State_InsideTag
                         break
                 self.setFormat(start, pos - start, self.m_colors[AttributeName])
@@ -159,15 +159,15 @@ class Highlighter(QtGui.QSyntaxHighlighter):
                 # find first non-space character
                 start = pos
                 while pos < length:
-                    ch = text.at(pos)
+                    ch = text[pos]
                     pos += 1
-                    if ch.toAscii() == "'":
+                    if ch == "'":
                         state = State_SingleQuote
                         break
-                    if ch.toAscii() == '"':
+                    if ch == '"':
                         state = State_DoubleQuote
                         break
-                    if not ch.isSpace():
+                    if ch != ' ':
                         break
 
                 if state == State_AttributeValue:
@@ -175,10 +175,10 @@ class Highlighter(QtGui.QSyntaxHighlighter):
                     # just stop at non-space or tag delimiter
                     start = pos
                     while pos < length:
-                        ch = text.at(pos)
-                        if ch.isSpace():
+                        ch = text[pos]
+                        if ch == ' ':
                             break
-                        if ch.toAscii() == ">" or ch.toAscii() == "/":
+                        if ch == ">" or ch == "/":
                             break
                         pos += 1
                     state = State_InsideTag
@@ -188,9 +188,9 @@ class Highlighter(QtGui.QSyntaxHighlighter):
             elif state == State_SingleQuote:
                 start = pos
                 while pos < length:
-                    ch = text.at(pos)
+                    ch = text[pos]
                     pos += 1
-                    if ch.toAscii() == "'":
+                    if ch == "'":
                         break
                 state = State_InsideTag
                 self.setFormat(start, pos - start, self.m_colors[AttributeValue])
@@ -199,28 +199,28 @@ class Highlighter(QtGui.QSyntaxHighlighter):
             elif state == State_DoubleQuote:
                 start = pos
                 while pos < length:
-                    ch = text.at(pos)
+                    ch = text[pos]
                     pos += 1
-                    if ch.toAscii() == '"':
+                    if ch == '"':
                         break
                 state = State_InsideTag
                 self.setFormat(start, pos - start, self.m_colors[AttributeValue])
             else:
                 while (pos < length):
-                    ch = text.at(pos)
-                    if ch.toAscii() == '<':
-                        if text.mid(pos, 4) == "<!--":
+                    ch = text[pos]
+                    if ch == '<':
+                        if text[pos:pos+4] == "<!--":
                             state = State_Comment
                         else:
-                            if text.mid(pos, 9).toUpper() == "<!DOCTYPE":
+                            if text[pos:pos+9].toUpper() == "<!DOCTYPE":
                                 state = State_DocType
                             else:
                                 state = State_TagStart
                         break
-                    elif ch.toAscii() == "&":
+                    elif ch == "&":
                         start = pos
                         while pos < length:
-                            if text.at(pos + 1) != ";":
+                            if text[pos + 1] != ";":
                                 self.setFormat(start, pos - start, self.m_colors[Entity])
                     else:
                         pos += 1

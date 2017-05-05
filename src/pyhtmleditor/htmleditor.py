@@ -21,6 +21,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtWebKit import *
+from PyQt5.QtWebKitWidgets import QWebPage
 
 from pyhtmleditor.highlighter import Highlighter
 from pyhtmleditor.ui.htmleditor_ui import Ui_MainWindow
@@ -32,6 +33,7 @@ class HtmlDialog(QDialog, Ui_Dialog):
         QDialog.__init__(self, parent)
         self.setupUi(self)
 
+
 class HtmlEditor(QMainWindow, Ui_MainWindow):
 
     def __init__(self):
@@ -42,8 +44,7 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         self.insertHtmlDialog = None
         self.tabWidget.setTabText(0, "Normal View")
         self.tabWidget.setTabText(1, "HTML Source")
-        self.connect(self.tabWidget,
-                SIGNAL("currentChanged(int)"), self.changeTab)
+        self.tabWidget.currentChanged.connect(self.changeTab)
         self.resize(800, 600)
 
         self.highlighter = Highlighter(self.plainTextEdit.document())
@@ -53,7 +54,7 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         self.standardToolBar.insertWidget(self.actionZoomOut, spacer)
 
         self.zoomLabel = QLabel()
-        self.standardToolBar.insertWidget(self.actionZoomOut, self.zoomLabel);
+        self.standardToolBar.insertWidget(self.actionZoomOut, self.zoomLabel)
 
         self.zoomSlider = QSlider(self)
         self.zoomSlider.setOrientation(Qt.Horizontal)
@@ -61,30 +62,19 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         self.zoomSlider.setRange(25, 400)
         self.zoomSlider.setSingleStep(25)
         self.zoomSlider.setPageStep(100)
-        self.connect(self.zoomSlider,
-                SIGNAL("valueChanged(int)"), self.changeZoom)
+        self.zoomSlider.valueChanged.connect(self.changeZoom)
         self.standardToolBar.insertWidget(self.actionZoomIn, self.zoomSlider)
 
-        self.connect(self.actionFileNew,
-                SIGNAL("triggered()"), self.fileNew)
-        self.connect(self.actionFileOpen,
-                SIGNAL("triggered()"), self.fileOpen)
-        self.connect(self.actionFileSave,
-                SIGNAL("triggered()"), self.fileSave)
-        self.connect(self.actionFileSaveAs,
-                SIGNAL("triggered()"), self.fileSaveAs)
-        self.connect(self.actionExit,
-                SIGNAL("triggered()"), SLOT("close()"))
-        self.connect(self.actionInsertImage,
-                SIGNAL("triggered()"), self.insertImage)
-        self.connect(self.actionCreateLink,
-                SIGNAL("triggered()"), self.createLink)
-        self.connect(self.actionInsertHtml,
-                SIGNAL("triggered()"), self.insertHtml)
-        self.connect(self.actionZoomOut,
-                SIGNAL("triggered()"), self.zoomOut)
-        self.connect(self.actionZoomIn,
-                SIGNAL("triggered()"), self.zoomIn)
+        self.actionFileNew.triggered.connect(self.fileNew)
+        self.actionFileOpen.triggered.connect(self.fileOpen)
+        self.actionFileSave.triggered.connect(self.fileSave)
+        self.actionFileSaveAs.triggered.connect(self.fileSaveAs)
+        self.actionExit.triggered.connect(self.close)
+        self.actionInsertImage.triggered.connect(self.insertImage)
+        self.actionCreateLink.triggered.connect(self.createLink)
+        self.actionInsertHtml.triggered.connect(self.insertHtml)
+        self.actionZoomOut.triggered.connect(self.zoomOut)
+        self.actionZoomIn.triggered.connect(self.zoomIn)
 
         # these are forward to internal QWebView
         self._forward_action(self.actionEditUndo, QWebPage.Undo)
@@ -97,70 +87,45 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         self._forward_action(self.actionFormatUnderline, QWebPage.ToggleUnderline)
 
         # Qt 4.5.0 has a bug: always returns 0 for QWebPage::SelectAll
-        self.connect(self.actionEditSelectAll,
-                SIGNAL("triggered()"), self.editSelectAll)
+        self.actionEditSelectAll.triggered.connect(self.editSelectAll)
 
-        self.connect(self.actionStyleParagraph,
-                SIGNAL("triggered()"), self.styleParagraph)
-        self.connect(self.actionStyleHeading1,
-                SIGNAL("triggered()"), self.styleHeading1)
-        self.connect(self.actionStyleHeading2,
-                SIGNAL("triggered()"), self.styleHeading2)
-        self.connect(self.actionStyleHeading3,
-                SIGNAL("triggered()"), self.styleHeading3)
-        self.connect(self.actionStyleHeading4,
-                SIGNAL("triggered()"), self.styleHeading4)
-        self.connect(self.actionStyleHeading5,
-                SIGNAL("triggered()"), self.styleHeading5)
-        self.connect(self.actionStyleHeading6,
-                SIGNAL("triggered()"), self.styleHeading6)
-        self.connect(self.actionStylePreformatted,
-                SIGNAL("triggered()"), self.stylePreformatted)
-        self.connect(self.actionStyleAddress,
-                SIGNAL("triggered()"), self.styleAddress)
-        self.connect(self.actionFormatFontName,
-                SIGNAL("triggered()"), self.formatFontName)
-        self.connect(self.actionFormatFontSize,
-                SIGNAL("triggered()"), self.formatFontSize)
-        self.connect(self.actionFormatTextColor,
-                SIGNAL("triggered()"), self.formatTextColor)
-        self.connect(self.actionFormatBackgroundColor,
-                SIGNAL("triggered()"), self.formatBackgroundColor)
+        self.actionStyleParagraph.triggered.connect(self.styleParagraph)
+        self.actionStyleHeading1.triggered.connect(self.styleHeading1)
+        self.actionStyleHeading2.triggered.connect(self.styleHeading2)
+        self.actionStyleHeading3.triggered.connect(self.styleHeading3)
+        self.actionStyleHeading4.triggered.connect(self.styleHeading4)
+        self.actionStyleHeading5.triggered.connect(self.styleHeading5)
+        self.actionStyleHeading6.triggered.connect(self.styleHeading6)
+        self.actionStylePreformatted.triggered.connect(self.stylePreformatted)
+        self.actionStyleAddress.triggered.connect(self.styleAddress)
+        self.actionFormatFontName.triggered.connect(self.formatFontName)
+        self.actionFormatFontSize.triggered.connect(self.formatFontSize)
+        self.actionFormatTextColor.triggered.connect(self.formatTextColor)
+        self.actionFormatBackgroundColor.triggered.connect(self.formatBackgroundColor)
 
         # no page action exists yet for these, so use execCommand trick
-        self.connect(self.actionFormatStrikethrough,
-                SIGNAL("triggered()"), self.formatStrikeThrough)
-        self.connect(self.actionFormatAlignLeft,
-                SIGNAL("triggered()"), self.formatAlignLeft)
-        self.connect(self.actionFormatAlignCenter,
-                SIGNAL("triggered()"), self.formatAlignCenter)
-        self.connect(self.actionFormatAlignRight,
-                SIGNAL("triggered()"), self.formatAlignRight)
-        self.connect(self.actionFormatAlignJustify,
-                SIGNAL("triggered()"), self.formatAlignJustify)
-        self.connect(self.actionFormatDecreaseIndent,
-                SIGNAL("triggered()"), self.formatDecreaseIndent)
-        self.connect(self.actionFormatIncreaseIndent,
-                SIGNAL("triggered()"), self.formatIncreaseIndent)
-        self.connect(self.actionFormatNumberedList,
-                SIGNAL("triggered()"), self.formatNumberedList)
-        self.connect(self.actionFormatBulletedList,
-                SIGNAL("triggered()"), self.formatBulletedList)
+        self.actionFormatStrikethrough.triggered.connect(self.formatStrikeThrough)
+        self.actionFormatAlignLeft.triggered.connect(self.formatAlignLeft)
+        self.actionFormatAlignCenter.triggered.connect(self.formatAlignCenter)
+        self.actionFormatAlignRight.triggered.connect(self.formatAlignRight)
+        self.actionFormatAlignJustify.triggered.connect(self.formatAlignJustify)
+        self.actionFormatDecreaseIndent.triggered.connect(self.formatDecreaseIndent)
+        self.actionFormatIncreaseIndent.triggered.connect(self.formatIncreaseIndent)
+        self.actionFormatNumberedList.triggered.connect(self.formatNumberedList)
+        self.actionFormatBulletedList.triggered.connect(self.formatBulletedList)
 
         # necessary to sync our actions
-        self.connect(self.webView.page(),
-                SIGNAL("selectionChanged()"), self.adjustActions)
+        self.webView.page().selectionChanged.connect(self.adjustActions)
 
-        self.connect(self.webView.page(),
-                SIGNAL("contentsChanged()"), self.adjustSource)
+        self.webView.page().contentsChanged.connect(self.adjustSource)
         self.webView.setFocus()
 
-        self.setCurrentFileName(QString())
+        self.setCurrentFileName('')
 
-        initialFile = QString(":/example.html")
+        initialFile = str(":/example.html")
         args = QCoreApplication.arguments()
-        if (args.count() == 2):
-            initialFile = args.at(1)
+        if (len(args) == 2):
+            initialFile = args[1]
 
         if not self.load(initialFile):
             self.fileNew()
@@ -171,10 +136,8 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         self.changeZoom(100)
 
     def _forward_action(self, action1, action2):
-        self.connect(action1,
-                SIGNAL("triggered()"), self.webView.pageAction(action2), SLOT("trigger()"))
-        self.connect(self.webView.pageAction(action2),
-                SIGNAL("changed()"), self.adjustActions)
+        action1.triggered.connect(self.webView.pageAction(action2).trigger)
+        self.webView.pageAction(action2).changed.connect(self.adjustActions)
 
     def _follow_enable(self, a1, a2):
         a1.setEnabled(self.webView.pageAction(a2).isEnabled())
@@ -199,7 +162,7 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
             self.webView.setHtml("<p></p>")
             self.webView.setFocus()
             self.webView.page().setContentEditable(True)
-            self.setCurrentFileName(QString())
+            self.setCurrentFileName('')
             self.setWindowModified(False)
 
             # quirk in QWebView: need an initial mouse click to show the cursor
@@ -214,13 +177,13 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
             QApplication.postEvent(self.webView, e2)
 
     def fileOpen(self):
-        fn = QFileDialog.getOpenFileName(self, self.tr("Open File..."),
-                QString(), self.tr("HTML-Files (*.htm *.html);;All Files (*)"))
-        if not fn.isEmpty():
+        fn,file_type = QFileDialog.getOpenFileName(self, self.tr("Open File..."),
+                '', self.tr("HTML-Files (*.htm *.html);;All Files (*)"))
+        if not fn:
             self.load(fn)
 
     def fileSave(self):
-        if self.fileName.isEmpty() or self.fileName.startsWith(QLatin1String(":/")):
+        if not self.fileName or self.fileName.startswith(str(":/")):
             return self.fileSaveAs()
 
         fd = QFile(self.fileName)
@@ -235,11 +198,11 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         return success
 
     def fileSaveAs(self):
-        fn = QFileDialog.getSaveFileName(self, self.tr("Save as..."),
-                QString(), self.tr("HTML-Files (*.htm *.html);;All Files (*)"))
-        if fn.isEmpty():
+        fn,file_type = QFileDialog.getSaveFileName(self, self.tr("Save as..."),
+                '', self.tr("HTML-Files (*.htm *.html);;All Files (*)"))
+        if not fn:
             return False
-        if not fn.endsWith(".htm", Qt.CaseInsensitive) or not fn.endsWith(".html", Qt.CaseInsensitive):
+        if not fn.endswith(".htm", Qt.CaseInsensitive) or not fn.endswith(".html", Qt.CaseInsensitive):
             fn += ".htm"
         self.setCurrentFileName(fn)
         return self.fileSave()
@@ -251,9 +214,9 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         filters += self.tr("Graphics Interchange Format (*.gif);;");
         filters += self.tr("All Files (*)");
 
-        fn = QFileDialog.getOpenFileName(self,
-                self.tr("Open image..."), QString(), filters)
-        if fn.isEmpty():
+        fn,file_type = QFileDialog.getOpenFileName(self,
+                self.tr("Open image..."), '', filters)
+        if not fn:
             return
         if not QFile.exists(fn):
             return
@@ -263,7 +226,7 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
 
     def guessUrlFromString(self, string):
         urlStr = string.trimmed()
-        test = QRegExp(QLatin1String("^[a-zA-Z]+\\:.*"))
+        test = QRegExp(str("^[a-zA-Z]+\\:.*"))
 
         hasSchema = test.exactMatch(urlStr)
         if hasSchema:
@@ -298,10 +261,8 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
     def insertHtml(self):
         if not self.insertHtmlDialog:
             self.insertHtmlDialog = HtmlDialog()
-            self.connect(self.insertHtmlDialog.buttonBox,
-                    SIGNAL("accepted()"), self.insertHtmlDialog, SLOT("accept()"))
-            self.connect(self.insertHtmlDialog.buttonBox,
-                    SIGNAL("rejected()"), self.insertHtmlDialog, SLOT("reject()"))
+            self.insertHtmlDialog.buttonBox.accepted.connect(self.insertHtmlDialog.accept)
+            self.insertHtmlDialog.buttonBox.rejected.connect(self.insertHtmlDialog.reject)
 
         self.insertHtmlDialog.plainTextEdit.clear()
         self.insertHtmlDialog.plainTextEdit.setFocus()
@@ -340,16 +301,16 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
     def execCommand(self, cmd, arg=None):
         frame = self.webView.page().mainFrame()
         if arg:
-            js = QString('document.execCommand("%1", false, "%2")').arg(cmd).arg(arg)
+            js = 'document.execCommand("{cmd}", false, "{arg}")'.format(cmd=cmd,arg=arg)
         else:
-            js = QString('document.execCommand("%1", false, null)').arg(cmd)
+            js = 'document.execCommand("{cmd}", false, null)'.format(cmd=cmd)
         frame.evaluateJavaScript(js)
 
     def queryCommandState(self, cmd):
         frame = self.webView.page().mainFrame()
-        js = QString('document.queryCommandState("%1", false, null)').arg(cmd)
+        js = 'document.queryCommandState({cmd}, false, null)'.format(cmd=cmd)
         result = frame.evaluateJavaScript(js)
-        return result.toString().simplified().toLower() == "true"
+        return str(result).strip().lower() == "true"
 
     def styleParagraph(self):
         self.execCommand("formatBlock", "p")
@@ -414,10 +375,9 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
     def formatFontSize(self):
         sizes = ["xx-small","x-small","small","medium","large","x-large","xx-large"]
         size = QInputDialog.getItem(self, self.tr("Font Size"), self.tr("Select font size:"),
-                QStringList(sizes), QStringList(sizes).indexOf("medium"), False)[0]
+                list(sizes), list(sizes).indexOf("medium"), False)[0]
 
-        self.execCommand("fontSize", QString.number(
-            QStringList(sizes).indexOf(size)))
+        self.execCommand("fontSize", int(list(sizes).indexOf(size)))
 
     def formatTextColor(self):
         color = QColorDialog.getColor(Qt.black, self)
@@ -460,18 +420,19 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
             self.sourceDirty = False
 
     def openLink(self, url):
-        msg = QString(self.tr("Open %1 ?")).arg(url.toString())
+        msg = "Open {url} ?".format(url=str(url))
         if (QMessageBox.question(self, self.tr("Open link"), msg,
             QMessageBox.Open|QMessageBox.Cancel)) == QMessageBox.Open:
             QDesktopServices.openUrl(url)
 
+    @pyqtSlot(int)
     def changeZoom(self, percent):
         self.actionZoomOut.setEnabled(percent > 25)
         self.actionZoomIn.setEnabled(percent < 400)
         factor = float(percent) / 100
         self.webView.setZoomFactor(factor)
 
-        self.zoomLabel.setText(self.tr(" Zoom: %1% ").arg(percent))
+        self.zoomLabel.setText(" Zoom: {percent}% ".format(percent=percent))
         self.zoomSlider.setValue(percent)
 
     def closeEvent(self, event):
@@ -491,22 +452,22 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         self.webView.setContent(data, "text/html")
         self.webView.page().setContentEditable(True)
         self.webView.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
-        self.connect(self.webView, SIGNAL("linkClicked(QUrl)"), self.openLink)
+        self.webView.linkClicked.connect(self.openLink)
 
         self.setCurrentFileName(f)
         return True
 
     def setCurrentFileName(self, fileName):
         self.fileName = fileName
-        if fileName.isEmpty():
-            shownName = QString("Untitled")
+        if not fileName:
+            shownName = str("Untitled")
         else:
-            shownName = QString(QFileInfo(fileName).fileName())
+            shownName = str(QFileInfo(fileName).fileName())
 
-        self.setWindowTitle(self.tr("%1[*] - %2").arg(shownName).arg(self.tr("HTML Editor")))
+        self.setWindowTitle("{shownName}[*] - {app_name}".format(shownName=shownName,app_name="HTML Editor"))
         self.setWindowModified(False)
 
         allowSave = True
-        if fileName.isEmpty() or fileName.startsWith(QLatin1String(":/")):
+        if not fileName or fileName.startswith(str(":/")):
             allowSave = False
         self.actionFileSave.setEnabled(allowSave)
