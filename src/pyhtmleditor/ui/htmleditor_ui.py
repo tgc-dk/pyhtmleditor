@@ -2,11 +2,12 @@
 
 # Form implementation generated from reading ui file 'htmleditor.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.12.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -27,7 +28,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.tab)
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.webView = QtWebKitWidgets.QWebView(self.tab)
+        self.webView = QtWebEngineWidgets.QWebEngineView(self.tab)
         self.webView.setUrl(QtCore.QUrl("about:blank"))
         self.webView.setObjectName("webView")
         self.verticalLayout_2.addWidget(self.webView)
@@ -390,5 +391,6 @@ class Ui_MainWindow(object):
         self.actionInsertHtml.setText(_translate("MainWindow", "Insert HTML..."))
         self.actionInsertHtml.setToolTip(_translate("MainWindow", "Insert HTML"))
 
-from PyQt5 import QtWebKitWidgets
+
+from PyQt5 import QtWebEngineWidgets
 from pyhtmleditor.ui import htmleditor_rc

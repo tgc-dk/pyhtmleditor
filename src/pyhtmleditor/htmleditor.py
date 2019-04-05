@@ -20,13 +20,11 @@ import sys
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from PyQt5.QtWebKit import *
-from PyQt5.QtWebKitWidgets import QWebPage
+from PyQt5 import QtCore, QtWebEngineWidgets, QtWidgets, QtWebChannel
 
 from pyhtmleditor.highlighter import Highlighter
 from pyhtmleditor.ui.htmleditor_ui import Ui_MainWindow
 from pyhtmleditor.ui.inserthtmldialog_ui import Ui_Dialog
-
 
 class HtmlDialog(QDialog, Ui_Dialog):
     def __init__(self, parent=None):
@@ -77,14 +75,14 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         self.actionZoomIn.triggered.connect(self.zoomIn)
 
         # these are forward to internal QWebView
-        self._forward_action(self.actionEditUndo, QWebPage.Undo)
-        self._forward_action(self.actionEditRedo, QWebPage.Redo)
-        self._forward_action(self.actionEditCut, QWebPage.Cut)
-        self._forward_action(self.actionEditCopy, QWebPage.Copy)
-        self._forward_action(self.actionEditPaste, QWebPage.Paste)
-        self._forward_action(self.actionFormatBold, QWebPage.ToggleBold)
-        self._forward_action(self.actionFormatItalic, QWebPage.ToggleItalic)
-        self._forward_action(self.actionFormatUnderline, QWebPage.ToggleUnderline)
+        self._forward_action(self.actionEditUndo, QtWebEngineWidgets.QWebEnginePage.Undo)
+        self._forward_action(self.actionEditRedo, QtWebEngineWidgets.QWebEnginePage.Redo)
+        self._forward_action(self.actionEditCut, QtWebEngineWidgets.QWebEnginePage.Cut)
+        self._forward_action(self.actionEditCopy, QtWebEngineWidgets.QWebEnginePage.Copy)
+        self._forward_action(self.actionEditPaste, QtWebEngineWidgets.QWebEnginePage.Paste)
+        self._forward_action(self.actionFormatBold, QtWebEngineWidgets.QWebEnginePage.ToggleBold)
+        self._forward_action(self.actionFormatItalic, QtWebEngineWidgets.QWebEnginePage.ToggleItalic)
+        self._forward_action(self.actionFormatUnderline, QtWebEngineWidgets.QWebEnginePage.ToggleUnderline)
 
         # Qt 4.5.0 has a bug: always returns 0 for QWebPage::SelectAll
         self.actionEditSelectAll.triggered.connect(self.editSelectAll)
@@ -114,15 +112,24 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         self.actionFormatNumberedList.triggered.connect(self.formatNumberedList)
         self.actionFormatBulletedList.triggered.connect(self.formatBulletedList)
 
+        # enable pasting
+        self.webView.settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.JavascriptCanAccessClipboard, True)
+        self.webView.settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.JavascriptCanPaste, True)
+        self.webView.page().settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.JavascriptCanAccessClipboard, True)
+        self.webView.page().settings().setAttribute(QtWebEngineWidgets.QWebEngineSettings.JavascriptCanPaste, True)
+
         # necessary to sync our actions
         self.webView.page().selectionChanged.connect(self.adjustActions)
 
-        self.webView.page().contentsChanged.connect(self.adjustSource)
         self.webView.setFocus()
 
         self.setCurrentFileName('')
 
-        initialFile = str(":/example.html")
+        self.webchannel = QtWebChannel.QWebChannel(self)
+        self.webView.page().setWebChannel(self.webchannel)
+        self.webchannel.registerObject('MyChannel', self)
+
+        initialFile = str("./src/pyhtmleditor/ui/example.html")
         args = QCoreApplication.arguments()
         if (len(args) == 2):
             initialFile = args[1]
@@ -161,7 +168,9 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         if self.maybeSave():
             self.webView.setHtml("<p></p>")
             self.webView.setFocus()
-            self.webView.page().setContentEditable(True)
+            #self.webView.page().setContentEditable(True)
+            #self.run_javascript("document.designMode = true;")
+            #self.webView.page().runJavaScript("document.body.contentEditable = true;");
             self.setCurrentFileName('')
             self.setWindowModified(False)
 
@@ -169,10 +178,8 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
             mx = self.webView.width() / 2
             my = self.webView.height() / 2
             center = QPoint(mx, my)
-            e1 = QMouseEvent(QEvent.MouseButtonPress, center,
-                    Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
-            e2 = QMouseEvent(QEvent.MouseButtonRelease, center,
-                    Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+            e1 = QMouseEvent(QEvent.MouseButtonPress, center, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+            e2 = QMouseEvent(QEvent.MouseButtonRelease, center, Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
             QApplication.postEvent(self.webView, e1)
             QApplication.postEvent(self.webView, e2)
 
@@ -189,7 +196,7 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         fd = QFile(self.fileName)
         success = fd.open(QIODevice.WriteOnly)
         if success:
-            content = self.webView.page().mainFrame().toHtml()
+            content = self.webView.page().toHtml()
             data = content.toUtf8()
             c = fd.write(data)
             success = (c >= data.length())
@@ -296,20 +303,18 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
             self.zoomSlider.setValue(percent)
 
     def editSelectAll(self):
-        self.webView.triggerPageAction(QWebPage.SelectAll)
+        self.webView.triggerPageAction(QtWebEngineWidgets.QWebEnginePage.SelectAll)
 
     def execCommand(self, cmd, arg=None):
-        frame = self.webView.page().mainFrame()
         if arg:
-            js = 'document.execCommand("{cmd}", false, "{arg}")'.format(cmd=cmd,arg=arg)
+            js = 'document.execCommand("{cmd}", false, "{arg}");'.format(cmd=cmd,arg=arg)
         else:
-            js = 'document.execCommand("{cmd}", false, null)'.format(cmd=cmd)
-        frame.evaluateJavaScript(js)
+            js = 'document.execCommand("{cmd}", false, null);'.format(cmd=cmd)
+        self.run_javascript(js)
 
     def queryCommandState(self, cmd):
-        frame = self.webView.page().mainFrame()
-        js = 'document.queryCommandState({cmd}, false, null)'.format(cmd=cmd)
-        result = frame.evaluateJavaScript(js)
+        js = 'document.queryCommandState("{cmd}") + ":{cmd}";'.format(cmd=cmd)
+        result = self.run_javascript(js, self.js_callback)
         return str(result).strip().lower() == "true"
 
     def styleParagraph(self):
@@ -390,21 +395,25 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
             self.execCommand("hiliteColor", color.name())
 
     def adjustActions(self):
-        self._follow_enable(self.actionEditUndo, QWebPage.Undo)
-        self._follow_enable(self.actionEditRedo, QWebPage.Redo)
-        self._follow_enable(self.actionEditCut, QWebPage.Cut)
-        self._follow_enable(self.actionEditCopy, QWebPage.Copy)
-        self._follow_enable(self.actionEditPaste, QWebPage.Paste)
-        self._follow_check(self.actionFormatBold, QWebPage.ToggleBold)
-        self._follow_check(self.actionFormatItalic, QWebPage.ToggleItalic)
-        self._follow_check(self.actionFormatUnderline, QWebPage.ToggleUnderline)
+        self._forward_action(self.actionEditUndo, QtWebEngineWidgets.QWebEnginePage.Undo)
+        self._forward_action(self.actionEditRedo, QtWebEngineWidgets.QWebEnginePage.Redo)
+        self._forward_action(self.actionEditCut, QtWebEngineWidgets.QWebEnginePage.Cut)
+        self._forward_action(self.actionEditCopy, QtWebEngineWidgets.QWebEnginePage.Copy)
+        self._forward_action(self.actionEditPaste, QtWebEngineWidgets.QWebEnginePage.Paste)
+        self._forward_action(self.actionFormatBold, QtWebEngineWidgets.QWebEnginePage.ToggleBold)
+        self._forward_action(self.actionFormatItalic, QtWebEngineWidgets.QWebEnginePage.ToggleItalic)
+        self._forward_action(self.actionFormatUnderline, QtWebEngineWidgets.QWebEnginePage.ToggleUnderline)
 
-        self.actionFormatStrikethrough.setChecked(
-                self.queryCommandState("strikeThrough"))
-        self.actionFormatNumberedList.setChecked(
-                self.queryCommandState("insertOrderedList"))
-        self.actionFormatBulletedList.setChecked(
-                self.queryCommandState("insertUnorderedList"))
+        self.queryCommandState("bold")
+        self.queryCommandState("italic")
+        self.queryCommandState("underLine")
+        self.queryCommandState("strikeThrough")
+        self.queryCommandState("alignLeft")
+        self.queryCommandState("alignCenter")
+        self.queryCommandState("alignRight")
+        self.queryCommandState("alignJustify")
+        self.queryCommandState("orderedList")
+        self.queryCommandState("unorderedList")
 
     def adjustSource(self):
         self.setWindowModified(True)
@@ -415,9 +424,11 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
 
     def changeTab(self, index):
         if self.sourceDirty and index == 1:
-            content = self.webView.page().mainFrame().toHtml()
-            self.plainTextEdit.setPlainText(content)
-            self.sourceDirty = False
+            self.webView.page().toHtml(self.changeTabCallback)
+
+    def changeTabCallback(self, html):
+        self.plainTextEdit.setPlainText(html)
+        self.sourceDirty = False
 
     def openLink(self, url):
         msg = "Open {url} ?".format(url=str(url))
@@ -450,9 +461,6 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
 
         data = fd.readAll()
         self.webView.setContent(data, "text/html")
-        self.webView.page().setContentEditable(True)
-        self.webView.page().setLinkDelegationPolicy(QWebPage.DelegateAllLinks)
-        self.webView.linkClicked.connect(self.openLink)
 
         self.setCurrentFileName(f)
         return True
@@ -471,3 +479,42 @@ class HtmlEditor(QMainWindow, Ui_MainWindow):
         if not fileName or fileName.startswith(str(":/")):
             allowSave = False
         self.actionFileSave.setEnabled(allowSave)
+
+    @QtCore.pyqtSlot(str)
+    def js_new_pos(self, pos):
+        self.adjustActions()
+
+    def js_callback(self, result):
+        # Result is formated like this: <true|false>:<formatting>
+        results = result.split(':')
+        if len(results) != 2:
+            print('unexpected result: %s' % result)
+            return
+        status = results[0]
+        formatting = results[1]
+        status = True if status == 'true' else False
+        format_action_map = { 'bold' : self.actionFormatBold,
+                              'italic' : self.actionFormatItalic,
+                              'underLine' : self.actionFormatUnderline,
+                              'strikeThrough' : self.actionFormatStrikethrough,
+                              'alignLeft' : self.actionFormatAlignLeft,
+                              'alignCenter' : self.actionFormatAlignCenter,
+                              'alignRight' : self.actionFormatAlignRight,
+                              'alignJustify' : self.actionFormatAlignJustify,
+                              'unorderedList' : self.actionFormatBulletedList,
+                              'orderedList' : self.actionFormatNumberedList }
+        action_to_set = format_action_map[formatting]
+        action_to_set.setChecked(status)
+
+    def run_javascript(self, script, callback=None):
+        """
+        Run some Javascript in the WebView
+
+        :param script: The script to run, a string
+        :param callback: Use callback to handle result. Defaults to None
+        """
+        if not callback:
+            self.webView.page().runJavaScript(script)
+        else:
+            self.webView.page().runJavaScript(script, callback)
+            return False

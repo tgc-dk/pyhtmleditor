@@ -2,14 +2,31 @@
 <html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>HTML Editor Demo</title>
-</head>
+<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+<script>
+var MyChannel = null;
+new QWebChannel(qt.webChannelTransport, function(channel) {
+    MyChannel = channel.objects.MyChannel;
+});
 
-<body>
+function newCaretPos()
+{
+    MyChannel.js_new_pos('test');
+}
+
+function setupNewCaret()
+{
+    document.body.onkeyup = newCaretPos;
+    document.body.onmouseup = newCaretPos;
+}
+</script>
+</head>
+<body contenteditable="true" onload="setupNewCaret()">
 <h1 align="center">WYSIWYG HTML Editor</h1>
 
 <!-- This is just a comment. We start here -->
 
-<p>WYSIWYG HTML Editor can be realized using QtWebKit, by utilizing the contentEditable property of a web page. If this is set to true, &quot;live editing&quot; of the web page is possible.</p>
+<p>WYSIWYG HTML Editor can be realized using QWebEngineView, by utilizing the contentEditable property of a web page. If this is set to true, &quot;live editing&quot; of the web page is possible.</p>
 
 <p>If you are viewing this document in the <i>HTML Editor</i> demo, you can edit this HTML file to explore QtWebKit editing features. We have included some comments in each of the following sections to encourage you to experiment.</p>
 

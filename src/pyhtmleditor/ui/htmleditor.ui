@@ -41,7 +41,7 @@
          <number>0</number>
         </property>
         <item>
-         <widget class="QWebView" name="webView">
+         <widget class="QWebEngineView" name="webView">
           <property name="url">
            <url>
             <string>about:blank</string>
@@ -587,13 +587,6 @@
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QWebView</class>
-   <extends>QWidget</extends>
-   <header>QtWebKit/QWebView</header>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="htmleditor.qrc"/>
  </resources>
